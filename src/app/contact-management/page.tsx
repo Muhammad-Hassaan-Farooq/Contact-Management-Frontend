@@ -2,10 +2,16 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PaginationComponent from "@/app/contact-management/PaginationComponent";
-import Contact from "@/utilities/dto/contact";
 import ContactTable from "@/app/contact-management/ContactTable";
+import CreateContactModal from "@/app/contact-management/modals/CreateContactModal";
+import UpdateContactModal from "@/app/contact-management/modals/UpdateContactModal";
+import SideDrawer from "@/app/contact-management/SideDrawer";
 
 const ListWithPagination = () => {
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isUpdateOpen, setIsUpdateOpen] = useState(false);
+    const [contactToUpdate, setContactToUpdate] = useState(null);
+    const [showDrawer, setShowDrawer] = useState(false);
     const fetchData = async (pageNumber:number) => {
         try {
             const response = await fetch(`http://localhost:8080/api/contacts?page=${pageNumber}&size=10`, {
@@ -35,6 +41,16 @@ const ListWithPagination = () => {
         }
     };
 
+    function handleUpdateModalOpen(contact){
+        setContactToUpdate(contact);
+        setIsUpdateOpen(true);
+    }
+
+    function handleUpdateModalClose(){
+        setContactToUpdate(null);
+        setIsUpdateOpen(false);
+    }
+
 
     const [contacts,setContacts] = useState([]);
     const [totalPages,setTotalPages] = useState(0);
@@ -45,6 +61,24 @@ const ListWithPagination = () => {
     useEffect(()=>{
         fetchData(0);   
     },[]);
+
+    const logout = async()=>{
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+
+            router.push('/auth');
+
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }
 
 
     const handlePageChange = (pageNumber:number) => {
@@ -64,18 +98,29 @@ const ListWithPagination = () => {
     const endPage = Math.min(totalPages, currentPage + pageRange);
 
     return (
-       <div className="bg-gray-100">
+       <div className="bg-gray-100 h-dvh">
            <nav className="flex justify-between p-3">
+               <div>
+                   <button
+                        onClick={() => setShowDrawer((prevState) => !prevState)}
+                       type="button" >
+                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                            stroke="currentColor" className="size-6">
+                           <path strokeLinecap="round" strokeLinejoin="round"
+                                 d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"/>
+                       </svg>
+                   </button>
+                   <SideDrawer onClose = {()=>setShowDrawer((prevState) => !prevState)} isOpen = {showDrawer} logout = {logout}/>
+               </div>
                <div className="flex items-center space-x-4">
-                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                        stroke="currentColor" className="size-6">
-                       <path fill="#ecedf2" strokeLinecap="round" strokeLinejoin="round"
-                             d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-                   </svg>
-                   <input className="rounded-full p-3 bg-gray-300 text-gray-500 w-80" placeholder="Search....."/>
+                   <input className="rounded-full p-3 bg-gray-300 text-gray-500 w-96" placeholder="Search....."/>
                </div>
                <div>
-                   <button type="button" className="text-white bg-blue-500 rounded-full p-3">
+                   {isCreateOpen && <CreateContactModal closeModal={()=>setIsCreateOpen(false)} refresh={()=>fetchData(0)}/>}
+                   {isUpdateOpen && <UpdateContactModal closeModal={()=> handleUpdateModalClose()} updateContact={contactToUpdate} refresh={()=>fetchData(0)}/>}
+                   <button
+                       onClick={() => setIsCreateOpen(true)}
+                       type="button" className="text-white bg-blue-500 rounded-full p-3">
                        <div className="flex items-center">
                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                                 stroke="currentColor" className="size-5">
@@ -89,9 +134,9 @@ const ListWithPagination = () => {
            <div className="p-4">
                <h1 className="font-bold text-3xl mb-4">All Contacts</h1>
                <div className="w-full">
-                  <ContactTable contacts = {contacts}/>
-                   <PaginationComponent handlePrevious={handlePrevPage} handleNext={handleNextPage} handlePageChange={handlePageChange}
-                                        totalPages={totalPages} currentPage={currentPage} />
+                  <ContactTable contacts = {contacts} refresh={()=>{fetchData(0)}} editContact = {(contact)=>handleUpdateModalOpen(contact)}/>
+                   {!(contacts.length == 0) && <PaginationComponent handlePrevious={handlePrevPage} handleNext={handleNextPage} handlePageChange={handlePageChange}
+                                        totalPages={totalPages} currentPage={currentPage}  />}
                </div>
            </div>
        </div>
