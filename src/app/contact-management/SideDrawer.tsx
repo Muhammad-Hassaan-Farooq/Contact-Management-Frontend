@@ -1,10 +1,70 @@
+import {useRef} from "react";
+import {useRouter} from "next/navigation";
+
 interface SideDrawerProps {
     onClose?: () => void,
     isOpen?: boolean,
-    logout?: () => Promise<void>
+    logout?: () => Promise<void>,
+    refresh?: () => Promise<void>
 }
 
-export default function SideDrawer({onClose, isOpen, logout}: SideDrawerProps) {
+export default function SideDrawer({onClose, isOpen, logout, refresh}: SideDrawerProps) {
+
+    const fileInputRef = useRef(null);
+    const router = useRouter();
+
+    const handleFileChange = async (event) => {
+        const file = event.target.files[0];
+        if (file && file.type === "text/vcard") {
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const response = await fetch(`http://localhost:8080/api/contacts/import`, {
+                    method: 'POST',
+                    body:formData,
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    refresh()
+                }
+                else {
+                    if (response.status === 401 || response.status === 403) {
+                        router.push('/auth');
+                    }
+                }
+            } catch (e) {
+                router.push("/auth")
+            }
+        } else {
+            console.error('Please select a .vcf file');
+        }
+    };
+
+    const handleExport = async () => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/contacts/export`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const url = window.URL.createObjectURL(new Blob([await response.blob()]));
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", "contacts.vcf");
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            }
+        } catch (error) {
+
+        }
+    }
+
     return (
         <>
 
@@ -26,12 +86,21 @@ export default function SideDrawer({onClose, isOpen, logout}: SideDrawerProps) {
 
                 <div className="p-4">
                     <button
+                        onClick={() => fileInputRef.current.click()}
                         className="w-full text-left py-2 px-4 mb-2 bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700"
 
                     >
                         Import Contacts
                     </button>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".vcf"
+                        style={{display: 'none'}}  // Hide the file input
+                        onChange={handleFileChange}
+                    />
                     <button
+                        onClick={handleExport}
                         className="w-full text-left py-2 px-4 mb-2 bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700"
 
                     >

@@ -6,12 +6,21 @@ import ContactTable from "@/app/contact-management/ContactTable";
 import CreateContactModal from "@/app/contact-management/modals/CreateContactModal";
 import UpdateContactModal from "@/app/contact-management/modals/UpdateContactModal";
 import SideDrawer from "@/app/contact-management/SideDrawer";
+import SearchBar from "@/app/contact-management/SearchBar";
 
 const ListWithPagination = () => {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isUpdateOpen, setIsUpdateOpen] = useState(false);
     const [contactToUpdate, setContactToUpdate] = useState(null);
     const [showDrawer, setShowDrawer] = useState(false);
+    const [contacts,setContacts] = useState([]);
+    const [totalPages,setTotalPages] = useState(0);
+    const [currentPage,setCurrentPage] = useState(0);
+    const [isLoading,setIsLoading] = useState(true);
+    const router = useRouter();
+    const [searchedContacts,setSearchedContacts] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+
     const fetchData = async (pageNumber:number) => {
         try {
             const response = await fetch(`http://localhost:8080/api/contacts?page=${pageNumber}&size=10`, {
@@ -52,11 +61,7 @@ const ListWithPagination = () => {
     }
 
 
-    const [contacts,setContacts] = useState([]);
-    const [totalPages,setTotalPages] = useState(0);
-    const [currentPage,setCurrentPage] = useState(0);
-    const [isLoading,setIsLoading] = useState(true);
-    const router = useRouter();
+
 
     useEffect(()=>{
         fetchData(0);   
@@ -110,11 +115,9 @@ const ListWithPagination = () => {
                                  d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"/>
                        </svg>
                    </button>
-                   <SideDrawer onClose = {()=>setShowDrawer((prevState) => !prevState)} isOpen = {showDrawer} logout = {logout}/>
+                   <SideDrawer refresh={()=>fetchData(0)} onClose = {()=>setShowDrawer((prevState) => !prevState)} isOpen = {showDrawer} logout = {logout}/>
                </div>
-               <div className="flex items-center space-x-4">
-                   <input className="rounded-full p-3 bg-gray-300 text-gray-500 w-96" placeholder="Search....."/>
-               </div>
+               <SearchBar setIsSearching = {setIsSearching} setSearchedContacts = {setSearchedContacts} />
                <div>
                    {isCreateOpen && <CreateContactModal closeModal={()=>setIsCreateOpen(false)} refresh={()=>fetchData(0)}/>}
                    {isUpdateOpen && <UpdateContactModal closeModal={()=> handleUpdateModalClose()} updateContact={contactToUpdate} refresh={()=>fetchData(0)}/>}
@@ -134,7 +137,7 @@ const ListWithPagination = () => {
            <div className="p-4">
                <h1 className="font-bold text-3xl mb-4">All Contacts</h1>
                <div className="w-full">
-                  <ContactTable contacts = {contacts} refresh={()=>{fetchData(0)}} editContact = {(contact)=>handleUpdateModalOpen(contact)}/>
+                  <ContactTable contacts = {isSearching?searchedContacts:contacts} refresh={()=>{fetchData(0)}} editContact = {(contact)=>handleUpdateModalOpen(contact)}/>
                    {!(contacts.length == 0) && <PaginationComponent handlePrevious={handlePrevPage} handleNext={handleNextPage} handlePageChange={handlePageChange}
                                         totalPages={totalPages} currentPage={currentPage}  />}
                </div>
