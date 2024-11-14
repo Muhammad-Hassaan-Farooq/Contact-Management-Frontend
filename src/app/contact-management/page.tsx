@@ -106,20 +106,34 @@ const ListWithPagination = () => {
        <div className="bg-gray-100 h-dvh">
            <nav className="flex justify-between p-3">
                <div>
+
                    <button
-                        onClick={() => setShowDrawer((prevState) => !prevState)}
-                       type="button" >
+                       onClick={() => setShowDrawer((prevState) => !prevState)}
+                       type="button">
                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                             stroke="currentColor" className="size-6">
                            <path strokeLinecap="round" strokeLinejoin="round"
                                  d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"/>
                        </svg>
                    </button>
-                   <SideDrawer refresh={()=>fetchData(0)} onClose = {()=>setShowDrawer((prevState) => !prevState)} isOpen = {showDrawer} logout = {logout}/>
+                   <button
+                       onClick={()=>router.push("/profile")}
+                       type="button"
+                       className="p-4 rounded-full hover:bg-gray-200 focus:outline-none">
+                       <img
+                           src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-1.2.1&amp;ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&amp;auto=format&amp;fit=crop&amp;w=1480&amp;q=80"
+                           alt="Profile"
+                           className="w-8 h-8 rounded-full object-cover"
+                       />
+                   </button>
+
+                   <SideDrawer refresh={() => fetchData(0)} onClose={() => setShowDrawer((prevState) => !prevState)}
+                               isOpen={showDrawer} logout={logout}/>
                </div>
-               <SearchBar setIsSearching = {setIsSearching} setSearchedContacts = {setSearchedContacts} />
+               <SearchBar setIsSearching={setIsSearching} setSearchedContacts={setSearchedContacts}/>
                <div>
-                   {isCreateOpen && <CreateContactModal closeModal={()=>setIsCreateOpen(false)} refresh={()=>fetchData(0)}/>}
+                   {isCreateOpen &&
+                       <CreateContactModal closeModal={() => setIsCreateOpen(false)} refresh={() => fetchData(0)}/>}
                    {isUpdateOpen && <UpdateContactModal closeModal={()=> handleUpdateModalClose()} updateContact={contactToUpdate} refresh={()=>fetchData(0)}/>}
                    <button
                        onClick={() => setIsCreateOpen(true)}
