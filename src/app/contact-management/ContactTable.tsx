@@ -137,7 +137,9 @@ export default function ContactTable({contacts, refresh, editContact}: ContactTa
                                 {contact["emailAddresses"] && contact["emailAddresses"].length > 0 ? (
                                     <ul className="list-disc list-inside">
                                         {contact["emailAddresses"].map((email, index) => (
-                                            <li key={index}>{email['email']}</li>
+                                            <li key={index}><a
+                                                href={`mailto:${email["email"]}`}>{email["email"]}({email["label"]})</a>
+                                            </li>
                                         ))}
                                     </ul>
                                 ) : (
@@ -148,7 +150,7 @@ export default function ContactTable({contacts, refresh, editContact}: ContactTa
                                 {contact["phoneNumbers"] && contact["phoneNumbers"].length > 0 ? (
                                     <ul className="list-disc list-inside">
                                         {contact["phoneNumbers"].map((phone, index) => (
-                                            <li key={index}>{phone["number"]}</li>
+                                            <li key={index}><a href={`tel:${phone["number"]}`}>{phone["number"]}({phone["label"]})</a></li>
                                         ))}
                                     </ul>
                                 ) : (
